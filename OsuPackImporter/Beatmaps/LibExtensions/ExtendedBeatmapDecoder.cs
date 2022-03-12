@@ -24,5 +24,24 @@ namespace OsuPackImporter.Beatmaps.LibExtensions
 
             throw new FileNotFoundException();
         }
+
+        public static ExtendedBeatmap Decode(Stream stream)
+        {
+            MemoryStream cachedStream = new MemoryStream();
+            if (stream is MemoryStream memStream)
+                cachedStream = new MemoryStream(memStream.ToArray());
+            else
+                stream.CopyTo(cachedStream);
+            stream.Position = 0;
+
+            ExtendedBeatmap beatmap = new ExtendedBeatmap(BeatmapDecoder.Decode(stream));
+            using (MD5 md5 = MD5.Create())
+            {
+                beatmap.Hash = md5.ComputeHash(cachedStream.ToArray());
+            }
+
+            cachedStream.Dispose();
+            return beatmap;
+        }
     }
 }
