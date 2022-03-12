@@ -1,7 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using OsuPackImporter.Beatmaps.LibExtensions;
 using OsuPackImporter.Interfaces.Parsers;
 using OsuPackImporter.Interfaces.Serializers;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 
 namespace OsuPackImporter.Beatmaps
 {
@@ -11,7 +16,7 @@ namespace OsuPackImporter.Beatmaps
         public List<ExtendedBeatmap> Beatmaps { get; private set; }
         public string Path { get; set; }
 
-        public BeatmapSet()
+        private BeatmapSet()
         {
             Beatmaps = new List<ExtendedBeatmap>();
         }
@@ -19,11 +24,38 @@ namespace OsuPackImporter.Beatmaps
         public BeatmapSet(string path) : this()
         {
             Path = path;
+            Parse();
         }
 
         public IParsable Parse()
         {
-            throw new System.NotImplementedException();
+            if (Path == null)
+            {
+                throw new NullReferenceException("No path has been assigned yet.");
+            }
+            try
+            {
+                using (ZipArchive archive = ZipArchive.Open(Path))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        if (entry.Key.EndsWith(".osu"))
+                        {
+                            Console.WriteLine(entry.Key);
+                            MemoryStream memstream = new MemoryStream();
+                            entry.OpenEntryStream().CopyTo(memstream);
+                            Beatmaps.Add(ExtendedBeatmapDecoder.Decode(memstream));
+                        }
+                    }
+                }
+
+                return this;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public byte[] Serialize()
