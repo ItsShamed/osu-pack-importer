@@ -12,39 +12,33 @@ namespace OsuPackImporter.Beatmaps
 {
     public class BeatmapSet : IParsable, ISerializable, IOSDBSerializable
     {
+        private Stream _fileStream;
+        public List<ExtendedBeatmap> Beatmaps { get; }
 
-        public List<ExtendedBeatmap> Beatmaps { get; private set; }
-        public string Path { get; set; }
-
-        private BeatmapSet()
+        public BeatmapSet(Stream fileStream)
         {
             Beatmaps = new List<ExtendedBeatmap>();
-        }
-
-        public BeatmapSet(string path) : this()
-        {
-            Path = path;
+            _fileStream = fileStream;
             Parse();
         }
 
+        public BeatmapSet(string path) : this(File.OpenRead(path))
+        {}
+
         public IParsable Parse()
         {
-            if (Path == null)
-            {
-                throw new NullReferenceException("No path has been assigned yet.");
-            }
             try
             {
-                using (ZipArchive archive = ZipArchive.Open(Path))
+                using (ZipArchive archive = ZipArchive.Open(_fileStream))
                 {
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         if (entry.Key.EndsWith(".osu"))
                         {
-                            Console.WriteLine(entry.Key);
                             MemoryStream memstream = new MemoryStream();
                             entry.OpenEntryStream().CopyTo(memstream);
                             Beatmaps.Add(ExtendedBeatmapDecoder.Decode(memstream));
+                            memstream.Dispose();
                         }
                     }
                 }
@@ -54,10 +48,15 @@ namespace OsuPackImporter.Beatmaps
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                return this;
             }
         }
 
+        public IParsable Parse(Stream stream)
+        {
+            _fileStream = stream;
+            return Parse();
+        }
         public byte[] Serialize()
         {
             throw new System.NotImplementedException();
