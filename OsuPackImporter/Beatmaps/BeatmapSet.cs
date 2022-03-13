@@ -10,7 +10,7 @@ using SharpCompress.Common;
 
 namespace OsuPackImporter.Beatmaps
 {
-    public class BeatmapSet : IParsable, ISerializable, IOSDBSerializable
+    public class BeatmapSet : IParsable, IOSDBSerializable
     {
         private Stream _fileStream;
         public List<ExtendedBeatmap> Beatmaps { get; }

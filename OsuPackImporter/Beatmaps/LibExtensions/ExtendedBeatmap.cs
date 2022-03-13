@@ -6,7 +6,7 @@ using OsuParsers.Beatmaps;
 
 namespace OsuPackImporter.Beatmaps.LibExtensions
 {
-    public class ExtendedBeatmap : Beatmap, ISerializable, IOSDBSerializable
+    public class ExtendedBeatmap : Beatmap, IOSDBSerializable
     {
         public byte[] Hash { get; set; }
 
