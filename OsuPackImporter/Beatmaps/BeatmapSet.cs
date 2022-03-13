@@ -57,14 +57,37 @@ namespace OsuPackImporter.Beatmaps
             _fileStream = stream;
             return Parse();
         }
+
         public byte[] Serialize()
         {
-            throw new System.NotImplementedException();
+            using (MemoryStream memstream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(memstream))
+                {
+                    foreach (ExtendedBeatmap beatmap in Beatmaps)
+                    {
+                        writer.Write(beatmap.Serialize());
+                    }
+                }
+
+                return memstream.ToArray();
+            }
         }
 
         public byte[] SerializeOSDB()
         {
-            throw new System.NotImplementedException();
+            using (MemoryStream memstream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(memstream))
+                {
+                    foreach (ExtendedBeatmap beatmap in Beatmaps)
+                    {
+                        writer.Write(beatmap.SerializeOSDB());
+                    }
+                }
+
+                return memstream.ToArray();
+            }
         }
     }
 }
