@@ -35,6 +35,7 @@ namespace OsuPackImporter.Beatmaps
                     {
                         if (entry.Key.EndsWith(".osu"))
                         {
+                            Console.WriteLine("[Beatmapset] Detected " + entry.Key);
                             MemoryStream memstream = new MemoryStream();
                             entry.OpenEntryStream().CopyTo(memstream);
                             Beatmaps.Add(ExtendedBeatmapDecoder.Decode(memstream));
