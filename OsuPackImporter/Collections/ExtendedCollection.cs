@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using OsuPackImporter.Beatmaps;
 using OsuPackImporter.Beatmaps.LibExtensions;
 using OsuPackImporter.Interfaces.Parsers;
@@ -32,10 +33,6 @@ namespace OsuPackImporter.Collections
             get
             {
                 List<byte[]> hashes = new List<byte[]>();
-                foreach (Collection subCollection in SubCollections)
-                {
-                    hashes.AddRange(subCollection.BeatmapHashes);
-                }
 
                 foreach (BeatmapSet beatmapSet in BeatmapSets)
                 {
@@ -89,6 +86,32 @@ namespace OsuPackImporter.Collections
             }
         }
 
+        public override byte[] Serialize()
+        {
+            Console.WriteLine("[Collection] Serializing " + Name + " (" + BeatmapHashes.Count + ")");
+            using (MemoryStream memstream = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(memstream))
+                {
+                    writer.Write((byte) 0x0b);
+                    writer.Write(Name ?? "Unnamed collection");
+                    writer.Write(BeatmapHashes.Count);
+                    foreach (byte[] hash in BeatmapHashes)
+                    {
+                        writer.Write((byte) 0x0b);
+                        writer.Write(BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant());
+                    }
+
+                    foreach (Collection collection in SubCollections)
+                    {
+                        writer.Write(collection.Serialize());
+                    }
+                }
+
+                return memstream.ToArray();
+            }
+        }
+
         public IParsable Parse()
         {
             using (var archive = GetArchive(_fileStream))
@@ -108,6 +131,10 @@ namespace OsuPackImporter.Collections
                     }
                     else if (entry.Key.EndsWith(".osz"))
                     {
+                        string path = Environment.GetEnvironmentVariable("LOCALAPPDATA") +
+                                      $@"\osu!\Songs\{entry.Key.Split('/').Last()}";
+                        Console.WriteLine(path);
+                        entry.WriteToFile(path);
                         using (MemoryStream memstream = new MemoryStream())
                         {
                             entry.OpenEntryStream().CopyTo(memstream);
@@ -136,6 +163,7 @@ namespace OsuPackImporter.Collections
                 stream.CopyTo(zipMemory);
                 stream.Position = 0;
             }
+
             MemoryStream GZipMemory = new MemoryStream(zipMemory.ToArray());
             MemoryStream sevenZipMemory = new MemoryStream(GZipMemory.ToArray());
             MemoryStream tarMemory = new MemoryStream(sevenZipMemory.ToArray());

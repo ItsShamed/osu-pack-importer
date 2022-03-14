@@ -74,7 +74,7 @@ namespace OsuPackImporter.Collections
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
                     writer.Write(_version);
-                    writer.Write(Collections.Count);
+                    writer.Write(ComputeCount());
                     foreach (Collection collection in Collections)
                     {
                         writer.Write(collection.Serialize());
@@ -92,6 +92,17 @@ namespace OsuPackImporter.Collections
             for (int i = 0; i < charCount; i += 2)
                 bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
             return bytes;
+        }
+
+        private int ComputeCount()
+        {
+            int count = 0;
+            foreach (Collection collection in Collections)
+            {
+                count += collection.Count;
+            }
+
+            return count;
         }
     }
 }

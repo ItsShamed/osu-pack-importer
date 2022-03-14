@@ -13,8 +13,9 @@ namespace OsuPackImporter.Collections
 
         public abstract int Count { get; }
 
-        public byte[] Serialize()
+        public virtual byte[] Serialize()
         {
+            Console.WriteLine("[Collection] Serializing " + Name + " (" + BeatmapHashes.Count + ")");
             UnicodeEncoding uni = new UnicodeEncoding();
             using (MemoryStream memstream = new MemoryStream())
             {
