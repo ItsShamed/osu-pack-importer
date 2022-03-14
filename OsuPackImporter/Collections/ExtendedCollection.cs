@@ -25,6 +25,8 @@ namespace OsuPackImporter.Collections
 
         public List<ExtendedBeatmap> Beatmaps { get; }
 
+        public override int Count => ComputeCount();
+
         public override List<byte[]> BeatmapHashes
         {
             get
@@ -193,6 +195,22 @@ namespace OsuPackImporter.Collections
             tarMemory.Dispose();
             Console.WriteLine("[Collection] Unknown input file");
             return null;
+        }
+
+        private int ComputeCount()
+        {
+            int count = 1;
+            foreach (Collection collection in SubCollections)
+            {
+                if (collection is LegacyCollection)
+                    count++;
+                else
+                {
+                    count += ((ExtendedCollection) collection).Count;
+                }
+            }
+
+            return count;
         }
     }
 }

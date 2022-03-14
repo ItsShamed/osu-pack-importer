@@ -11,6 +11,8 @@ namespace OsuPackImporter.Collections
         public string Name { get; protected set; }
         public abstract List<byte[]> BeatmapHashes { get; }
 
+        public abstract int Count { get; }
+
         public byte[] Serialize()
         {
             UnicodeEncoding uni = new UnicodeEncoding();
