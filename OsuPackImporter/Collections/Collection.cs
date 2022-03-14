@@ -19,7 +19,7 @@ namespace OsuPackImporter.Collections
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
                     writer.Write((byte) 0x0b);
-                    writer.Write(Name);
+                    writer.Write(Name ?? "Unnamed collection");
                     writer.Write(BeatmapHashes.Count);
                     foreach (byte[] hash in BeatmapHashes)
                     {
