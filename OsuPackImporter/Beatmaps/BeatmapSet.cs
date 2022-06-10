@@ -61,6 +61,7 @@ namespace OsuPackImporter.Beatmaps
 
         public byte[] Serialize()
         {
+            Console.WriteLine("[BeatmapSet] Serializing...");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
@@ -77,6 +78,7 @@ namespace OsuPackImporter.Beatmaps
 
         public byte[] SerializeOSDB()
         {
+            Console.WriteLine("[BeatmapSet] Serializing...");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))

@@ -80,6 +80,7 @@ namespace OsuPackImporter.Collections
 
         public byte[] SerializeOSDB()
         {
+            Console.WriteLine("[Collection] Serializing " + Name + " (" + ExtendedCount + ")");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
@@ -122,8 +123,10 @@ namespace OsuPackImporter.Collections
                     writer.Write(BeatmapHashes.Count);
                     foreach (byte[] hash in BeatmapHashes)
                     {
+                        string stringHash = BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant();
+                        Console.WriteLine("[Collection] Serializing hash " + stringHash);
                         writer.Write((byte) 0x0b);
-                        writer.Write(BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant());
+                        writer.Write(stringHash);
                     }
 
                     foreach (Collection collection in SubCollections)
@@ -157,7 +160,7 @@ namespace OsuPackImporter.Collections
                     {
                         string path = Environment.GetEnvironmentVariable("LOCALAPPDATA") +
                                       $@"\osu!\Songs\{entry.Key.Split('/').Last()}";
-                        Console.WriteLine(path);
+                        Console.WriteLine("[Collection] Importing to " + path);
                         entry.WriteToFile(path);
                         using (MemoryStream memstream = new MemoryStream())
                         {

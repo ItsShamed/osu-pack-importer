@@ -22,6 +22,8 @@ namespace OsuPackImporter.Beatmaps.LibExtensions
 
         public byte[] Serialize()
         {
+            Console.WriteLine(
+                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...");
             using (MD5 md5 = MD5.Create())
             {
                 return md5.ComputeHash(Hash);
@@ -30,9 +32,10 @@ namespace OsuPackImporter.Beatmaps.LibExtensions
 
         public byte[] SerializeOSDB()
         {
-
             // https://gist.github.com/ItsShamed/c3c6c83903653d72d1f499d7059fe185#beatmap-format
 
+            Console.WriteLine(
+                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
