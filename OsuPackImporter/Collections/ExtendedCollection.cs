@@ -26,7 +26,25 @@ namespace OsuPackImporter.Collections
 
         public List<ExtendedBeatmap> Beatmaps { get; }
 
-        public override int Count => ComputeCount();
+        public override int Count => ComputeCount(out _, out _);
+
+        public int LegacyCount
+        {
+            get
+            {
+                ComputeCount(out int legacyCount, out _);
+                return legacyCount;
+            }
+        }
+
+        public int ExtendedCount
+        {
+            get
+            {
+                ComputeCount(out _, out int extendedCount);
+                return extendedCount;
+            }
+        }
 
         public override List<byte[]> BeatmapHashes
         {
@@ -80,6 +98,12 @@ namespace OsuPackImporter.Collections
                     }
 
                     writer.Write(0);
+
+                    foreach (Collection subCollection in SubCollections)
+                    {
+                        if (subCollection is ExtendedCollection collection)
+                            writer.Write(collection.SerializeOSDB());
+                    }
                 }
 
                 return memstream.ToArray();
@@ -225,20 +249,19 @@ namespace OsuPackImporter.Collections
             return null;
         }
 
-        private int ComputeCount()
+        private int ComputeCount(out int legacyCount, out int extendedCount)
         {
-            int count = 1;
+            extendedCount = 1;
+            legacyCount = 0;
             foreach (Collection collection in SubCollections)
             {
                 if (collection is LegacyCollection)
-                    count++;
+                    legacyCount++;
                 else
-                {
-                    count += ((ExtendedCollection) collection).Count;
-                }
+                    extendedCount += ((ExtendedCollection) collection).Count;
             }
 
-            return count;
+            return legacyCount + extendedCount;
         }
     }
 }
