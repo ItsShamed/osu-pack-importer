@@ -80,7 +80,7 @@ namespace OsuPackImporter.Collections
 
         public byte[] SerializeOSDB()
         {
-            Console.WriteLine("[Collection] Serializing " + Name + " (" + ExtendedCount + ")");
+            Console.WriteLine("[ExtendedCollection] Serializing " + Name + " (" + ExtendedCount + ")");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
@@ -113,7 +113,7 @@ namespace OsuPackImporter.Collections
 
         public override byte[] Serialize()
         {
-            Console.WriteLine("[Collection] Serializing " + Name + " (" + BeatmapHashes.Count + ")");
+            Console.WriteLine("[ExtendedCollection] Serializing " + Name + " (" + BeatmapHashes.Count + ")");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
@@ -124,7 +124,6 @@ namespace OsuPackImporter.Collections
                     foreach (byte[] hash in BeatmapHashes)
                     {
                         string stringHash = BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant();
-                        Console.WriteLine("[Collection] Serializing hash " + stringHash);
                         writer.Write((byte) 0x0b);
                         writer.Write(stringHash);
                     }
@@ -145,7 +144,7 @@ namespace OsuPackImporter.Collections
             {
                 foreach (var entry in archive.Entries)
                 {
-                    Console.WriteLine("[Collection] Parsing " + entry.Key);
+                    Console.WriteLine("[ExtendedCollection] Parsing " + entry.Key);
                     if (entry.Key.EndsWith(".zip") || entry.Key.EndsWith(".7z") || entry.Key.EndsWith(".rar") ||
                         entry.Key.EndsWith(".gz"))
                     {
@@ -198,7 +197,7 @@ namespace OsuPackImporter.Collections
 
             if (RarArchive.IsRarFile(stream, new ReaderOptions {LeaveStreamOpen = true}))
             {
-                Console.WriteLine("[Collection] RAR Archive");
+                Console.WriteLine("[ExtendedCollection] RAR Archive");
                 return RarArchive.Open(stream);
             }
 
@@ -206,7 +205,7 @@ namespace OsuPackImporter.Collections
 
             if (ZipArchive.IsZipFile(stream))
             {
-                Console.WriteLine("[Collection] Zip Archive");
+                Console.WriteLine("[ExtendedCollection] Zip Archive");
                 zipMemory.Dispose();
                 sevenZipMemory.Dispose();
                 GZipMemory.Dispose();
@@ -219,7 +218,7 @@ namespace OsuPackImporter.Collections
 
             if (SevenZipArchive.IsSevenZipFile(sevenZipMemory))
             {
-                Console.WriteLine("[Collection] 7Zip Archive");
+                Console.WriteLine("[ExtendedCollection] 7Zip Archive");
                 sevenZipMemory.Dispose();
                 GZipMemory.Dispose();
                 tarMemory.Dispose();
@@ -231,7 +230,7 @@ namespace OsuPackImporter.Collections
 
             if (GZipArchive.IsGZipFile(GZipMemory))
             {
-                Console.WriteLine("[Collection] GZip Archive");
+                Console.WriteLine("[ExtendedCollection] GZip Archive");
                 GZipMemory.Dispose();
                 tarMemory.Dispose();
                 return GZipArchive.Open(stream);
@@ -242,13 +241,13 @@ namespace OsuPackImporter.Collections
 
             if (TarArchive.IsTarFile(tarMemory))
             {
-                Console.WriteLine("[Collection] Tar Archive");
+                Console.WriteLine("[ExtendedCollection] Tar Archive");
                 tarMemory.Dispose();
                 return TarArchive.Open(stream);
             }
 
             tarMemory.Dispose();
-            Console.WriteLine("[Collection] Unknown input file");
+            Console.WriteLine("[ExtendedCollection] Unknown input file");
             return null;
         }
 

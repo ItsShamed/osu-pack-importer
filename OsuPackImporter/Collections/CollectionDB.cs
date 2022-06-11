@@ -32,25 +32,25 @@ namespace OsuPackImporter.Collections
 
         public IParsable Parse()
         {
+            Console.WriteLine("[CollectionDB] Parsing collection.db");
             try
             {
                 using (BinaryReader reader = new BinaryReader(_fileStream))
                 {
                     _version = reader.ReadInt32();
                     int iterations = reader.ReadInt32();
-                    Console.WriteLine(iterations + " iterations");
+                    Console.WriteLine("[CollectionDB] There are " + iterations + "collections");
                     for (int i = 0; i < iterations; i++)
                     {
                         if (reader.ReadByte() != 0x0b) throw new FormatException("Invalid string");
                         LegacyCollection collection = new LegacyCollection(reader.ReadString());
-                        Console.WriteLine(collection.Name);
                         int beatmapIterations = reader.ReadInt32();
-                        Console.WriteLine(beatmapIterations + " beatmap iterations");
+                        Console.WriteLine("[CollectionDB] Parsing collection " + collection.Name + " (" +
+                                          beatmapIterations + ")");
                         for (int j = 0; j < beatmapIterations; j++)
                         {
                             if (reader.ReadByte() != 0x0b) throw new FormatException("Invalid string");
                             string hex = reader.ReadString();
-                            Console.WriteLine(hex);
                             collection.BeatmapHashes.Add(StringToByteArray(hex));
                         }
 
@@ -69,6 +69,7 @@ namespace OsuPackImporter.Collections
 
         public byte[] Serialize()
         {
+            Console.WriteLine("[CollectionDB] Serializing collection.db");
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))

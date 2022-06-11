@@ -26,8 +26,9 @@ namespace OsuPackImporter.Collections
                     writer.Write(BeatmapHashes.Count);
                     foreach (byte[] hash in BeatmapHashes)
                     {
+                        string beatmapHash = BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant();
                         writer.Write((byte) 0x0b);
-                        writer.Write(BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant());
+                        writer.Write(beatmapHash);
                     }
                 }
 
