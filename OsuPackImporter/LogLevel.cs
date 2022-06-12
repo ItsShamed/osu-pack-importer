@@ -1,11 +1,10 @@
-﻿namespace OsuPackImporter
+﻿namespace OsuPackImporter;
+
+public enum LogLevel
 {
-    public enum LogLevel
-    {
-        Debug,
-        Info,
-        Warn,
-        Error,
-        Fatal
-    }
+    Debug,
+    Info,
+    Warn,
+    Error,
+    Fatal
 }

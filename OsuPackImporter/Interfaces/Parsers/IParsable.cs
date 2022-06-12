@@ -1,9 +1,8 @@
 ﻿using Spectre.Console;
 
-namespace OsuPackImporter.Interfaces.Parsers
+namespace OsuPackImporter.Interfaces.Parsers;
+
+public interface IParsable
 {
-    public interface IParsable
-    {
-        IParsable Parse(ProgressContext context = null);
-    }
+    IParsable Parse(ProgressContext? context = null);
 }

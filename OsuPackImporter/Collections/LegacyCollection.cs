@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
 
-namespace OsuPackImporter.Collections
+namespace OsuPackImporter.Collections;
+
+public class LegacyCollection : Collection
 {
-    public class LegacyCollection : Collection
+    public LegacyCollection(string? name)
     {
-        public sealed override List<byte[]> BeatmapHashes { get; }
-
-        public override int Count => 1;
-
-        public LegacyCollection(string name)
-        {
-            Name = name;
-            BeatmapHashes = new List<byte[]>();
-        }
+        Name = name;
+        BeatmapHashes = new List<byte[]>();
     }
+
+    public sealed override List<byte[]> BeatmapHashes { get; }
+
+    public override int Count => 1;
 }

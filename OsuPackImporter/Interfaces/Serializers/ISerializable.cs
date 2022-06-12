@@ -1,9 +1,8 @@
 ﻿using Spectre.Console;
 
-namespace OsuPackImporter.Interfaces.Serializers
+namespace OsuPackImporter.Interfaces.Serializers;
+
+public interface ISerializable
 {
-    public interface ISerializable
-    {
-        byte[] Serialize(ProgressContext context = null);
-    }
+    byte[] Serialize(ProgressContext? context = null);
 }
