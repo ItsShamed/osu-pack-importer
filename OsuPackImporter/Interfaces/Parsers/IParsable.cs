@@ -1,7 +1,9 @@
-﻿namespace OsuPackImporter.Interfaces.Parsers
+﻿using Spectre.Console;
+
+namespace OsuPackImporter.Interfaces.Parsers
 {
     public interface IParsable
     {
-        IParsable Parse();
+        IParsable Parse(ProgressContext context = null);
     }
 }

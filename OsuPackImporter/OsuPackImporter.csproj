@@ -32,9 +32,8 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="CommandLine, Version=2.8.0.0, Culture=neutral, PublicKeyToken=5a870481e358d379">
-          <HintPath>..\packages\CommandLineParser.2.8.0\lib\net461\CommandLine.dll</HintPath>
-          <Private>True</Private>
+        <Reference Include="CommandLine, Version=2.9.1.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
+          <HintPath>..\packages\CommandLineParser.2.9.1\lib\net461\CommandLine.dll</HintPath>
         </Reference>
         <Reference Include="mscorlib" />
         <Reference Include="OsuParsers, Version=1.7.1.0, Culture=neutral, PublicKeyToken=null">
@@ -86,11 +85,14 @@
         <Compile Include="Interfaces\Parsers\IParsable.cs" />
         <Compile Include="Interfaces\Serializers\IOSDBSerializable.cs" />
         <Compile Include="Interfaces\Serializers\ISerializable.cs" />
+        <Compile Include="Logging.cs" />
+        <Compile Include="LogLevel.cs" />
         <Compile Include="Options.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
+      <None Include="App.config" />
       <None Include="packages.config" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

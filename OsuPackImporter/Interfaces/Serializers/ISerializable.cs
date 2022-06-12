@@ -1,7 +1,9 @@
-﻿namespace OsuPackImporter.Interfaces.Serializers
+﻿using Spectre.Console;
+
+namespace OsuPackImporter.Interfaces.Serializers
 {
     public interface ISerializable
     {
-        byte[] Serialize();
+        byte[] Serialize(ProgressContext context = null);
     }
 }

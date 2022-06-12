@@ -1,7 +1,9 @@
-﻿namespace OsuPackImporter.Interfaces.Serializers
+﻿using Spectre.Console;
+
+namespace OsuPackImporter.Interfaces.Serializers
 {
     public interface IOSDBSerializable : ISerializable
     {
-        byte[] SerializeOSDB();
+        byte[] SerializeOSDB(ProgressContext context = null);
     }
 }

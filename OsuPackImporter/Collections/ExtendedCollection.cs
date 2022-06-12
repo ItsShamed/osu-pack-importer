@@ -14,6 +14,7 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Readers;
+using Spectre.Console;
 
 namespace OsuPackImporter.Collections
 {
@@ -62,40 +63,44 @@ namespace OsuPackImporter.Collections
             }
         }
 
-        public ExtendedCollection(Stream stream, string name = null)
+        public ExtendedCollection(Stream stream, string name = null, ProgressContext context = null)
         {
             Name = name;
             SubCollections = new List<Collection>();
             BeatmapSets = new List<BeatmapSet>();
             Beatmaps = new List<ExtendedBeatmap>();
             _fileStream = stream;
-            Console.WriteLine("[Collection] New collection: " + Name);
-            Parse();
+            Logging.Log("[Collection] New collection: " + Name, LogLevel.Debug);
+            Parse(context);
         }
 
-        public ExtendedCollection(string path)
-            : this(File.OpenRead(path), path.Split(Path.DirectorySeparatorChar).Last().Split('.')[0])
+        public ExtendedCollection(string path, ProgressContext context = null)
+            : this(File.OpenRead(path), path.Split(Path.DirectorySeparatorChar).Last().Split('.')[0], context)
         {
         }
 
-        public byte[] SerializeOSDB()
+        public byte[] SerializeOSDB(ProgressContext context = null)
         {
-            Console.WriteLine("[ExtendedCollection] Serializing " + Name + " (" + ExtendedCount + ")");
+            Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + ExtendedCount + ")", LogLevel.Debug);
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
+                    var task = context?.AddTask("Serializing " + Name);
+                    task?.MaxValue(BeatmapHashes.Count + SubCollections.Count);
                     writer.Write(Name ?? "Unnamed collection");
                     writer.Write(0);
                     writer.Write(BeatmapHashes.Count);
                     foreach (BeatmapSet beatmapSet in BeatmapSets)
                     {
                         writer.Write(beatmapSet.SerializeOSDB());
+                        task?.Increment(1);
                     }
 
                     foreach (ExtendedBeatmap beatmap in Beatmaps)
                     {
                         writer.Write(beatmap.SerializeOSDB());
+                        task?.Increment(1);
                     }
 
                     writer.Write(0);
@@ -104,6 +109,7 @@ namespace OsuPackImporter.Collections
                     {
                         if (subCollection is ExtendedCollection collection)
                             writer.Write(collection.SerializeOSDB());
+                        task?.Increment(1);
                     }
                 }
 
@@ -111,13 +117,16 @@ namespace OsuPackImporter.Collections
             }
         }
 
-        public override byte[] Serialize()
+        public override byte[] Serialize(ProgressContext context = null)
         {
-            Console.WriteLine("[ExtendedCollection] Serializing " + Name + " (" + BeatmapHashes.Count + ")");
+            Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + BeatmapHashes.Count + ")", LogLevel.Debug);
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
+                    var task = context?.AddTask("Serializing " + Name);
+                    task?.MaxValue(BeatmapHashes.Count + SubCollections.Count);
+                    
                     writer.Write((byte) 0x0b);
                     writer.Write(Name ?? "Unnamed collection");
                     writer.Write(BeatmapHashes.Count);
@@ -126,11 +135,13 @@ namespace OsuPackImporter.Collections
                         string stringHash = BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant();
                         writer.Write((byte) 0x0b);
                         writer.Write(stringHash);
+                        task?.Increment(1);
                     }
 
                     foreach (Collection collection in SubCollections)
                     {
                         writer.Write(collection.Serialize());
+                        task?.Increment(1);
                     }
                 }
 
@@ -138,13 +149,16 @@ namespace OsuPackImporter.Collections
             }
         }
 
-        public IParsable Parse()
+        public IParsable Parse(ProgressContext context = null)
         {
             using (var archive = GetArchive(_fileStream))
             {
+                var task = context?.AddTask("Importing collection " + Name);
+                task?.MaxValue(archive.Entries.Count());
+
                 foreach (var entry in archive.Entries)
                 {
-                    Console.WriteLine("[ExtendedCollection] Parsing " + entry.Key);
+                    Logging.Log("[ExtendedCollection] Parsing " + entry.Key, LogLevel.Debug);
                     if (entry.Key.EndsWith(".zip") || entry.Key.EndsWith(".7z") || entry.Key.EndsWith(".rar") ||
                         entry.Key.EndsWith(".gz"))
                     {
@@ -159,7 +173,7 @@ namespace OsuPackImporter.Collections
                     {
                         string path = Environment.GetEnvironmentVariable("LOCALAPPDATA") +
                                       $@"\osu!\Songs\{entry.Key.Split('/').Last()}";
-                        Console.WriteLine("[Collection] Importing to " + path);
+                        Logging.Log("[ExtendedCollection] Importing to " + path, LogLevel.Debug);
                         entry.WriteToFile(path);
                         using (MemoryStream memstream = new MemoryStream())
                         {
@@ -169,9 +183,10 @@ namespace OsuPackImporter.Collections
                     }
                     else if (entry.Key.EndsWith(".osu"))
                     {
-                        Console.Write("[Collection] Adding beatmap");
+                        Logging.Log("[Collection] Adding beatmap", LogLevel.Debug);
                         Beatmaps.Add(ExtendedBeatmapDecoder.Decode(entry.OpenEntryStream()));
                     }
+                    task?.Increment(1);
                 }
             }
 
@@ -197,7 +212,7 @@ namespace OsuPackImporter.Collections
 
             if (RarArchive.IsRarFile(stream, new ReaderOptions {LeaveStreamOpen = true}))
             {
-                Console.WriteLine("[ExtendedCollection] RAR Archive");
+                Logging.Log("[ExtendedCollection] RAR Archive");
                 return RarArchive.Open(stream);
             }
 
@@ -205,7 +220,7 @@ namespace OsuPackImporter.Collections
 
             if (ZipArchive.IsZipFile(stream))
             {
-                Console.WriteLine("[ExtendedCollection] Zip Archive");
+                Logging.Log("[ExtendedCollection] Zip Archive");
                 zipMemory.Dispose();
                 sevenZipMemory.Dispose();
                 GZipMemory.Dispose();
@@ -218,7 +233,7 @@ namespace OsuPackImporter.Collections
 
             if (SevenZipArchive.IsSevenZipFile(sevenZipMemory))
             {
-                Console.WriteLine("[ExtendedCollection] 7Zip Archive");
+                Logging.Log("[ExtendedCollection] 7Zip Archive", LogLevel.Debug);
                 sevenZipMemory.Dispose();
                 GZipMemory.Dispose();
                 tarMemory.Dispose();
@@ -230,7 +245,7 @@ namespace OsuPackImporter.Collections
 
             if (GZipArchive.IsGZipFile(GZipMemory))
             {
-                Console.WriteLine("[ExtendedCollection] GZip Archive");
+                Logging.Log("[ExtendedCollection] GZip Archive", LogLevel.Debug);
                 GZipMemory.Dispose();
                 tarMemory.Dispose();
                 return GZipArchive.Open(stream);
@@ -241,13 +256,13 @@ namespace OsuPackImporter.Collections
 
             if (TarArchive.IsTarFile(tarMemory))
             {
-                Console.WriteLine("[ExtendedCollection] Tar Archive");
+                Logging.Log("[ExtendedCollection] Tar Archive", LogLevel.Debug);
                 tarMemory.Dispose();
                 return TarArchive.Open(stream);
             }
 
             tarMemory.Dispose();
-            Console.WriteLine("[ExtendedCollection] Unknown input file");
+            Logging.Log("[ExtendedCollection] Unknown input file", LogLevel.Debug);
             return null;
         }
 

@@ -7,6 +7,7 @@ using OsuPackImporter.Interfaces.Serializers;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using Spectre.Console;
 
 namespace OsuPackImporter.Beatmaps
 {
@@ -15,32 +16,38 @@ namespace OsuPackImporter.Beatmaps
         private Stream _fileStream;
         public List<ExtendedBeatmap> Beatmaps { get; }
 
-        public BeatmapSet(Stream fileStream)
+        public BeatmapSet(Stream fileStream, ProgressContext context = null)
         {
             Beatmaps = new List<ExtendedBeatmap>();
             _fileStream = fileStream;
-            Parse();
+            Parse(context);
         }
 
-        public BeatmapSet(string path) : this(File.OpenRead(path))
-        {}
+        public BeatmapSet(string path, ProgressContext context = null) : this(File.OpenRead(path), context)
+        {
+        }
 
-        public IParsable Parse()
+        public IParsable Parse(ProgressContext context = null)
         {
             try
             {
                 using (ZipArchive archive = ZipArchive.Open(_fileStream))
                 {
+                    var task = Program.Verbose
+                        ? context?.AddTask("Importing beatmapset (" + archive.Entries.Count + ")")
+                        : null;
+                    task?.MaxValue(archive.Entries.Count);
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         if (entry.Key.EndsWith(".osu"))
                         {
-                            Console.WriteLine("[Beatmapset] Detected " + entry.Key);
+                            Logging.Log("[Beatmapset] Detected " + entry.Key, LogLevel.Debug);
                             MemoryStream memstream = new MemoryStream();
                             entry.OpenEntryStream().CopyTo(memstream);
                             Beatmaps.Add(ExtendedBeatmapDecoder.Decode(memstream));
                             memstream.Dispose();
                         }
+                        task?.Increment(1);
                     }
                 }
 
@@ -48,27 +55,31 @@ namespace OsuPackImporter.Beatmaps
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logging.Log("An unknown error occured while parsing a beatmapset:", LogLevel.Error);
+                AnsiConsole.WriteException(e);
                 return this;
             }
         }
 
-        public IParsable Parse(Stream stream)
+        public IParsable Parse(Stream stream, ProgressContext context = null)
         {
             _fileStream = stream;
-            return Parse();
+            return Parse(context);
         }
 
-        public byte[] Serialize()
+        public byte[] Serialize(ProgressContext context = null)
         {
-            Console.WriteLine("[BeatmapSet] Serializing...");
+            Logging.Log("[BeatmapSet] Serializing...", LogLevel.Debug);
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
+                    var task = Program.Verbose ? context?.AddTask("Serializing beatmapset") : null;
+                    task?.MaxValue(Beatmaps.Count);
                     foreach (ExtendedBeatmap beatmap in Beatmaps)
                     {
                         writer.Write(beatmap.Serialize());
+                        task?.Increment(1);
                     }
                 }
 
@@ -76,16 +87,19 @@ namespace OsuPackImporter.Beatmaps
             }
         }
 
-        public byte[] SerializeOSDB()
+        public byte[] SerializeOSDB(ProgressContext context = null)
         {
-            Console.WriteLine("[BeatmapSet] Serializing...");
+            Logging.Log("[BeatmapSet] Serializing...", LogLevel.Debug);
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
                 {
+                    var task = Program.Verbose ? context?.AddTask("Serializing beatmapset") : null;
+                    task?.MaxValue(Beatmaps.Count);
                     foreach (ExtendedBeatmap beatmap in Beatmaps)
                     {
                         writer.Write(beatmap.SerializeOSDB());
+                        task?.Increment(1);
                     }
                 }
 

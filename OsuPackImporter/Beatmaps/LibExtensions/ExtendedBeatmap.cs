@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using OsuPackImporter.Interfaces.Serializers;
 using OsuParsers.Beatmaps;
+using Spectre.Console;
 
 namespace OsuPackImporter.Beatmaps.LibExtensions
 {
@@ -20,22 +21,24 @@ namespace OsuPackImporter.Beatmaps.LibExtensions
             ColoursSection = beatmap.ColoursSection;
         }
 
-        public byte[] Serialize()
+        public byte[] Serialize(ProgressContext context = null)
         {
-            Console.WriteLine(
-                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...");
+            Logging.Log(
+                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...",
+                LogLevel.Debug);
             using (MD5 md5 = MD5.Create())
             {
                 return md5.ComputeHash(Hash);
             }
         }
 
-        public byte[] SerializeOSDB()
+        public byte[] SerializeOSDB(ProgressContext context = null)
         {
             // https://gist.github.com/ItsShamed/c3c6c83903653d72d1f499d7059fe185#beatmap-format
 
-            Console.WriteLine(
-                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...");
+            Logging.Log(
+                $"[ExtendedBeatmap] Serializing beatmap {MetadataSection.ArtistUnicode} - {MetadataSection.TitleUnicode} [{MetadataSection.Version}]...",
+                LogLevel.Debug);
             using (MemoryStream memstream = new MemoryStream())
             {
                 using (BinaryWriter writer = new BinaryWriter(memstream))
