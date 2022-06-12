@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Threading;
 using CommandLine;
 using CommandLine.Text;
 using OsuPackImporter.Collections;
@@ -13,7 +12,7 @@ using Spectre.Console;
 
 namespace OsuPackImporter
 {
-    public class Program
+    public static class Program
     {
         public static bool Verbose;
         public static bool AutoImport;
@@ -21,33 +20,11 @@ namespace OsuPackImporter
 
         public static void Main(string[] args)
         {
-            _ = new Thread((() => { }));
             _parserResult = Parser.Default.ParseArguments<Options>(args);
 
             _parserResult
                 .WithParsed(o => Environment.Exit(Run(o)))
                 .WithNotParsed(e => Environment.Exit(FailRun(e, _parserResult)));
-
-            /*
-            ExtendedCollection collection = new ExtendedCollection(path);
-            Directory.SetCurrentDirectory(Environment.GetEnvironmentVariable("LOCALAPPDATA") +
-                                          Path.DirectorySeparatorChar + "osu!");
-            CollectionDB collectionDb = new CollectionDB("collection.db");
-            collectionDb.Collections.Add(collection);
-            if (File.Exists("collection.db.OLD"))
-            {
-                File.Delete("collection.db.OLD");
-            }
-
-            File.Copy("collection.db", "collection.db.OLD");
-            using (FileStream stream = File.Create(@"collection.db"))
-            {
-                using (BinaryWriter writer = new BinaryWriter(stream))
-                {
-                    writer.Write(collectionDb.Serialize());
-                }
-            }
-        */
         }
 
         private static int Run(Options options)
@@ -64,6 +41,7 @@ namespace OsuPackImporter
             var osuPath = options.OsuPath ?? Environment.GetEnvironmentVariable("LOCALAPPDATA") +
                 Path.DirectorySeparatorChar + "osu!";
             var useOsdb = !string.IsNullOrWhiteSpace(options.OSDBPath);
+            AutoImport = !options.NoAutoImport && !useOsdb;
             ExtendedCollection extendedCollection = null;
             Logging.Log("Importing archive " + options.InputPath);
             Progress(ctx => { extendedCollection = new ExtendedCollection(options.InputPath, ctx); });
@@ -83,6 +61,10 @@ namespace OsuPackImporter
 
         private static int FailRun(IEnumerable<Error> errors, ParserResult<Options> parserResult)
         {
+            foreach (Error error in errors)
+            {
+                Logging.Log(error.ToString(), LogLevel.Error);
+            }
             Console.Error.WriteLine(HelpText.RenderUsageText(parserResult));
             return 1;
         }

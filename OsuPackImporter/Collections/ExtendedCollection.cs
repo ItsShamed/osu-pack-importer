@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using OsuPackImporter.Beatmaps;
 using OsuPackImporter.Beatmaps.LibExtensions;
 using OsuPackImporter.Interfaces.Parsers;
@@ -20,48 +19,7 @@ namespace OsuPackImporter.Collections
 {
     public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     {
-        private Stream _fileStream;
-
-        public List<Collection> SubCollections { get; }
-        public List<BeatmapSet> BeatmapSets { get; }
-
-        public List<ExtendedBeatmap> Beatmaps { get; }
-
-        public override int Count => ComputeCount(out _, out _);
-
-        public int LegacyCount
-        {
-            get
-            {
-                ComputeCount(out int legacyCount, out _);
-                return legacyCount;
-            }
-        }
-
-        public int ExtendedCount
-        {
-            get
-            {
-                ComputeCount(out _, out int extendedCount);
-                return extendedCount;
-            }
-        }
-
-        public override List<byte[]> BeatmapHashes
-        {
-            get
-            {
-                List<byte[]> hashes = new List<byte[]>();
-
-                foreach (BeatmapSet beatmapSet in BeatmapSets)
-                {
-                    hashes.AddRange(beatmapSet.Beatmaps.ConvertAll(b => b.Hash));
-                }
-
-                hashes.AddRange(Beatmaps.ConvertAll(b => b.Hash));
-                return hashes;
-            }
-        }
+        private readonly Stream _fileStream;
 
         public ExtendedCollection(Stream stream, string name = null, ProgressContext context = null)
         {
@@ -79,25 +37,63 @@ namespace OsuPackImporter.Collections
         {
         }
 
+        public List<Collection> SubCollections { get; }
+        public List<BeatmapSet> BeatmapSets { get; }
+
+        public List<ExtendedBeatmap> Beatmaps { get; }
+
+        public override int Count => ComputeCount(out _, out _);
+
+        public int LegacyCount
+        {
+            get
+            {
+                ComputeCount(out var legacyCount, out _);
+                return legacyCount;
+            }
+        }
+
+        public int ExtendedCount
+        {
+            get
+            {
+                ComputeCount(out _, out var extendedCount);
+                return extendedCount;
+            }
+        }
+
+        public override List<byte[]> BeatmapHashes
+        {
+            get
+            {
+                var hashes = new List<byte[]>();
+
+                foreach (var beatmapSet in BeatmapSets) hashes.AddRange(beatmapSet.Beatmaps.ConvertAll(b => b.Hash));
+
+                hashes.AddRange(Beatmaps.ConvertAll(b => b.Hash));
+                return hashes;
+            }
+        }
+
         public byte[] SerializeOSDB(ProgressContext context = null)
         {
             Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + ExtendedCount + ")", LogLevel.Debug);
-            using (MemoryStream memstream = new MemoryStream())
+            using (var memstream = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(memstream))
+                using (var writer = new BinaryWriter(memstream))
                 {
                     var task = context?.AddTask("Serializing " + Name);
                     task?.MaxValue(BeatmapHashes.Count + SubCollections.Count);
                     writer.Write(Name ?? "Unnamed collection");
                     writer.Write(0);
                     writer.Write(BeatmapHashes.Count);
-                    foreach (BeatmapSet beatmapSet in BeatmapSets)
+                    foreach (var beatmapSet in BeatmapSets)
                     {
                         writer.Write(beatmapSet.SerializeOSDB());
                         task?.Increment(1);
                     }
 
-                    foreach (ExtendedBeatmap beatmap in Beatmaps)
+                    foreach (var beatmap in Beatmaps)
                     {
                         writer.Write(beatmap.SerializeOSDB());
                         task?.Increment(1);
@@ -105,7 +101,7 @@ namespace OsuPackImporter.Collections
 
                     writer.Write(0);
 
-                    foreach (Collection subCollection in SubCollections)
+                    foreach (var subCollection in SubCollections)
                     {
                         if (subCollection is ExtendedCollection collection)
                             writer.Write(collection.SerializeOSDB());
@@ -120,25 +116,25 @@ namespace OsuPackImporter.Collections
         public override byte[] Serialize(ProgressContext context = null)
         {
             Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + BeatmapHashes.Count + ")", LogLevel.Debug);
-            using (MemoryStream memstream = new MemoryStream())
+            using (var memstream = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(memstream))
+                using (var writer = new BinaryWriter(memstream))
                 {
                     var task = context?.AddTask("Serializing " + Name);
                     task?.MaxValue(BeatmapHashes.Count + SubCollections.Count);
-                    
+
                     writer.Write((byte) 0x0b);
                     writer.Write(Name ?? "Unnamed collection");
                     writer.Write(BeatmapHashes.Count);
-                    foreach (byte[] hash in BeatmapHashes)
+                    foreach (var hash in BeatmapHashes)
                     {
-                        string stringHash = BitConverter.ToString(hash).Replace("-", String.Empty).ToLowerInvariant();
+                        var stringHash = BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
                         writer.Write((byte) 0x0b);
                         writer.Write(stringHash);
                         task?.Increment(1);
                     }
 
-                    foreach (Collection collection in SubCollections)
+                    foreach (var collection in SubCollections)
                     {
                         writer.Write(collection.Serialize());
                         task?.Increment(1);
@@ -162,7 +158,7 @@ namespace OsuPackImporter.Collections
                     if (entry.Key.EndsWith(".zip") || entry.Key.EndsWith(".7z") || entry.Key.EndsWith(".rar") ||
                         entry.Key.EndsWith(".gz"))
                     {
-                        using (MemoryStream memstream = new MemoryStream())
+                        using (var memstream = new MemoryStream())
                         {
                             entry.OpenEntryStream().CopyTo(memstream);
                             SubCollections.Add(new ExtendedCollection(memstream,
@@ -171,11 +167,15 @@ namespace OsuPackImporter.Collections
                     }
                     else if (entry.Key.EndsWith(".osz"))
                     {
-                        string path = Environment.GetEnvironmentVariable("LOCALAPPDATA") +
-                                      $@"\osu!\Songs\{entry.Key.Split('/').Last()}";
-                        Logging.Log("[ExtendedCollection] Importing to " + path, LogLevel.Debug);
-                        entry.WriteToFile(path);
-                        using (MemoryStream memstream = new MemoryStream())
+                        var path = Environment.GetEnvironmentVariable("LOCALAPPDATA") +
+                                   $@"\osu!\Songs\{entry.Key.Split('/').Last()}";
+                        if (Program.AutoImport)
+                        {
+                            Logging.Log("[ExtendedCollection] Importing to " + path, LogLevel.Debug);
+                            entry.WriteToFile(path);
+                        }
+
+                        using (var memstream = new MemoryStream())
                         {
                             entry.OpenEntryStream().CopyTo(memstream);
                             BeatmapSets.Add(new BeatmapSet(memstream));
@@ -186,6 +186,7 @@ namespace OsuPackImporter.Collections
                         Logging.Log("[Collection] Adding beatmap", LogLevel.Debug);
                         Beatmaps.Add(ExtendedBeatmapDecoder.Decode(entry.OpenEntryStream()));
                     }
+
                     task?.Increment(1);
                 }
             }
@@ -197,7 +198,9 @@ namespace OsuPackImporter.Collections
         {
             MemoryStream zipMemory;
             if (stream is MemoryStream mem)
+            {
                 zipMemory = new MemoryStream(mem.ToArray());
+            }
             else
             {
                 zipMemory = new MemoryStream();
@@ -205,9 +208,9 @@ namespace OsuPackImporter.Collections
                 stream.Position = 0;
             }
 
-            MemoryStream GZipMemory = new MemoryStream(zipMemory.ToArray());
-            MemoryStream sevenZipMemory = new MemoryStream(GZipMemory.ToArray());
-            MemoryStream tarMemory = new MemoryStream(sevenZipMemory.ToArray());
+            var GZipMemory = new MemoryStream(zipMemory.ToArray());
+            var sevenZipMemory = new MemoryStream(GZipMemory.ToArray());
+            var tarMemory = new MemoryStream(sevenZipMemory.ToArray());
 
 
             if (RarArchive.IsRarFile(stream, new ReaderOptions {LeaveStreamOpen = true}))
@@ -270,13 +273,11 @@ namespace OsuPackImporter.Collections
         {
             extendedCount = 1;
             legacyCount = 0;
-            foreach (Collection collection in SubCollections)
-            {
+            foreach (var collection in SubCollections)
                 if (collection is LegacyCollection)
                     legacyCount++;
                 else
                     extendedCount += ((ExtendedCollection) collection).Count;
-            }
 
             return legacyCount + extendedCount;
         }
