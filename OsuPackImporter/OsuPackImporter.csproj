@@ -2,17 +2,35 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <OutputType>Exe</OutputType>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <Nullable>enable</Nullable>
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <PublishReadyToRun>true</PublishReadyToRun>
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <Company>Kirutsu</Company>
+        <AssemblyTitle>OsuPackImporter</AssemblyTitle>
+        <AssemblyName>OsuPackImporter</AssemblyName>
+        <ProductName>OsuPackImporter</ProductName>
+        <Copyright>Copyright © Kirutsu 2022. Licensed under the MIT license</Copyright>
     </PropertyGroup>
+    <PropertyGroup>
+        <MinVerVerbosity>detailed</MinVerVerbosity>
+    </PropertyGroup>
+    <Target Name="OsuPackImporterVersionning" AfterTargets="MinVer">
+        <Message Importance="high" Text="Versionning build $(MinVerMajor).$(MinVerMinor).$(MinVerPatch)"/>
+        <PropertyGroup>
+            <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</AssemblyVersion>
+            <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</FileVersion>
+        </PropertyGroup>
+    </Target>
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="MinVer" Version="4.0.0" />
+        <PackageReference Include="MinVer" Version="4.1.0-rc.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="OsuParsers" Version="1.7.1" />
         <PackageReference Include="SharpCompress" Version="0.31.0" />
         <PackageReference Include="Spectre.Console" Version="0.44.0" />
