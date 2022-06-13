@@ -11,16 +11,10 @@
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
     <ItemGroup>
-        <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.330701\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.Common.dll"/>
-        <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.330701\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.dll"/>
-        <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.330701\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.CodeFixes.dll"/>
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1"/>
-        <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.330701"/>
-        <PackageReference Include="MinVer" Version="4.0.0"/>
-        <PackageReference Include="OsuParsers" Version="1.7.1"/>
-        <PackageReference Include="SharpCompress" Version="0.31.0"/>
-        <PackageReference Include="Spectre.Console" Version="0.44.0"/>
+        <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="MinVer" Version="4.0.0" />
+        <PackageReference Include="OsuParsers" Version="1.7.1" />
+        <PackageReference Include="SharpCompress" Version="0.31.0" />
+        <PackageReference Include="Spectre.Console" Version="0.44.0" />
     </ItemGroup>
 </Project>
