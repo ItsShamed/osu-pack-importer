@@ -6,6 +6,9 @@ using Spectre.Console;
 
 namespace OsuPackImporter.Collections;
 
+/// <summary>
+/// C# object representing an osu! collection.
+/// </summary>
 public abstract class Collection : ISerializable
 {
     public string? Name { get; protected set; }
@@ -13,6 +16,11 @@ public abstract class Collection : ISerializable
 
     public abstract int Count { get; }
 
+    /// <summary>
+    /// Serializes the collection as a byte array following the format provided <a href="https://github.com/ppy/osu/wiki/Legacy-database-file-structure#collectiondb-format">here</a>.
+    /// </summary>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
+    /// <returns>Byte array containing the serialized data</returns>
     public virtual byte[] Serialize(ProgressContext? context = null)
     {
         Logging.Log("[Collection] Serializing " + Name + " (" + BeatmapHashes.Count + ")", LogLevel.Debug);

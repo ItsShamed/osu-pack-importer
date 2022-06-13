@@ -37,18 +37,18 @@ public class Options
         new Example("Convert and import a beatmap pack into a collection in the game",
             new Options
             {
-                InputPath = "BeatmapPack.7z"
+                InputPath = "<path to archive>",
             }),
         new Example("Convert without importing a beatmap pack into a collection in the game",
             new Options
             {
-                InputPath = "BeatmapPack.7z",
+                InputPath = "<path to archive>",
                 NoAutoImport = true
             }),
         new Example("Convert a beatmap pack into an .osdb file", new Options
         {
-            InputPath = "BeatmapPack.zip",
-            OSDBPath = "collection.osdb"
+            InputPath = "<path to archive>",
+            OSDBPath = "<path to output .osdb file>"
         })
     };
 }

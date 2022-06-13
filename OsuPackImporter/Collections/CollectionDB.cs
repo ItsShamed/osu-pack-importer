@@ -7,10 +7,18 @@ using Spectre.Console;
 
 namespace OsuPackImporter.Collections;
 
+/// <summary>
+/// C# representing the collection.db
+/// </summary>
 public class CollectionDB : IParsable, ISerializable
 {
     private readonly Stream _fileStream;
 
+    /// <summary>
+    /// Parses a stream containing the collection.db file and generates a <see cref="CollectionDB"/> object from it.
+    /// </summary>
+    /// <param name="stream">Stream containing a collection.db file</param>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
     public CollectionDB(Stream stream, ProgressContext? context = null)
     {
         Collections = new List<Collection>();
@@ -18,14 +26,30 @@ public class CollectionDB : IParsable, ISerializable
         Parse(context);
     }
 
+    /// <summary>
+    /// Parses the collection.db files and generates a <see cref="CollectionDB"/> object from it.
+    /// </summary>
+    /// <param name="path">Location of the collection.db file</param>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
     public CollectionDB(string path, ProgressContext? context = null) : this(File.OpenRead(path), context)
     {
     }
 
+    /// <summary>
+    /// The version of the osu! instance that generated the collection.db file.
+    /// </summary>
     public int Version { get; private set; }
 
     public List<Collection> Collections { get; }
 
+    /// <summary>
+    /// Parses the currently loaded collection.db file and builds the <see cref="CollectionDB"/> object.
+    /// It follows the <a href="https://github.com/ppy/osu/wiki/Legacy-database-file-structure#collectiondb-format">following structure</a>.
+    /// </summary>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
+    /// <returns>This instance of <see cref="CollectionDB"/></returns>
+    /// <exception cref="FormatException">If the file does not follow the data structure osu! follows, most likely
+    /// the file is corrupted.</exception>
     public IParsable Parse(ProgressContext? context = null)
     {
         Logging.Log("[CollectionDB] Parsing collection.db", LogLevel.Debug);
@@ -72,6 +96,13 @@ public class CollectionDB : IParsable, ISerializable
         }
     }
 
+    /// <summary>
+    /// Serializes this instance of <see cref="CollectionDB"/> to a byte array using the
+    /// <a href="https://github.com/ppy/osu/wiki/Legacy-database-file-structure#collectiondb-format">following
+    /// structure</a>.
+    /// </summary>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
+    /// <returns>The serialized data.</returns>
     public byte[] Serialize(ProgressContext? context = null)
     {
         Logging.Log("[CollectionDB] Serializing collection.db", LogLevel.Debug);
@@ -100,6 +131,11 @@ public class CollectionDB : IParsable, ISerializable
         _fileStream.Dispose();
     }
 
+    /// <summary>
+    /// Converts a hex string to a byte array.
+    /// </summary>
+    /// <param name="hex">Input hex string</param>
+    /// <returns>The byte array constructed from the hex string.</returns>
     private byte[] StringToByteArray(string hex)
     {
         var charCount = hex.Length;

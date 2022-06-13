@@ -17,10 +17,20 @@ using Spectre.Console;
 
 namespace OsuPackImporter.Collections;
 
+/// <summary>
+/// This collection class uses <see cref="ExtendedBeatmap"/> and <see cref="BeatmapSets"/> objects to store
+/// beatmaps and is serializable to the OSDB format.
+/// </summary>
 public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
 {
     private readonly Stream _fileStream;
 
+    /// <summary>
+    /// Initializes a new instance from archive stream.
+    /// </summary>
+    /// <param name="stream">Archive stream</param>
+    /// <param name="name">Name of the collection</param>
+    /// <param name="context">Terminal context, used to update progress bars.</param>
     public ExtendedCollection(Stream stream, string? name = null, ProgressContext? context = null)
     {
         Name = name;
@@ -32,6 +42,11 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
         Parse(context);
     }
 
+    /// <summary>
+    /// Initializes a new instance from archive file.
+    /// </summary>
+    /// <param name="path">Path of the archive file</param>
+    /// <param name="context">Terminal context, used to update progress bars.</param>
     public ExtendedCollection(string path, ProgressContext? context = null)
         : this(File.OpenRead(path), path.Split(Path.DirectorySeparatorChar).Last().Split('.')[0], context)
     {
@@ -44,6 +59,9 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
 
     public override int Count => ComputeCount(out _, out _);
 
+    /// <summary>
+    /// Number of sub-<see cref="LegacyCollection"/>s in this collection.
+    /// </summary>
     public int LegacyCount
     {
         get
@@ -53,6 +71,9 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
         }
     }
 
+    /// <summary>
+    /// Number of sub-<see cref="ExtendedCollection"/>s in this collection.
+    /// </summary>
     public int ExtendedCount
     {
         get
@@ -75,6 +96,12 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
         }
     }
 
+    /// <summary>
+    /// Serializes this collection to the OSDB format documented
+    /// <a href="https://gist.github.com/ItsShamed/c3c6c83903653d72d1f499d7059fe185#collection-format">here</a>.
+    /// </summary>
+    /// <param name="context">Terminal context, used to update</param>
+    /// <returns>The serialized data</returns>
     public byte[] SerializeOSDB(ProgressContext? context = null)
     {
         Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + ExtendedCount + ")", LogLevel.Debug);
@@ -113,6 +140,11 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
         }
     }
 
+    /// <summary>
+    /// Serializes this collections to the legacy collection.db format documented
+    /// </summary>
+    /// <param name="context">Terminal context, used to update the progress bars</param>
+    /// <returns>The serialized data.</returns>
     public override byte[] Serialize(ProgressContext? context = null)
     {
         Logging.Log("[ExtendedCollection] Serializing " + Name + " (" + BeatmapHashes.Count + ")", LogLevel.Debug);
@@ -150,6 +182,12 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
             collection.Rename();
     }
 
+    /// <summary>
+    /// Parses the currently loaded archive stream and builds the collection.
+    /// </summary>
+    /// <param name="context">Terminal context, used to update the progress bars.</param>
+    /// <returns>This instance of <see cref="ExtendedCollection"/></returns>
+    /// <exception cref="NotSupportedException">if the loaded archive is not supported by SharpCompress</exception>
     public IParsable Parse(ProgressContext? context = null)
     {
         using (var archive = GetArchive(_fileStream))
