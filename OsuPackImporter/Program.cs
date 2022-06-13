@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using CommandLine;
 using CommandLine.Text;
 using OsuPackImporter.Collections;
@@ -76,6 +78,25 @@ public static class Program
 
         Directory.SetCurrentDirectory(osuPath);
         CollectionDB? collectionDb = null;
+
+        Logging.Log("Checking if osu! is open...", LogLevel.Debug);
+
+        if (Process.GetProcessesByName("osu!").Length > 0)
+        {
+            Logging.Log("osu! is currently open. Please close the game before continuing.", LogLevel.Warn);
+            AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
+                .SpinnerStyle(Style.Parse("yellow bold"))
+                .Start("Waiting for osu! to be closed...", _ =>
+                {
+                    Process[] processes = Process.GetProcessesByName("osu!");
+                    while (processes.Length > 0)
+                    {
+                        processes = Process.GetProcessesByName("osu!");
+                        Thread.Sleep(100);
+                    }
+                });
+        }
 
         Logging.Log("Parsing collection.db...");
 
