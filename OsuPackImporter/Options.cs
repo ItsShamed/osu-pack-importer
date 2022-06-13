@@ -18,6 +18,11 @@ public class Options
         HelpText = "Prevent automatic import of beatmaps in the game when dumping into collection.db.",
         Required = false)]
     public bool NoAutoImport { get; set; }
+    
+    [Option("no-rename", Default = false,
+        HelpText = "Don't rename collections after import.",
+        Required = false)]
+    public bool NoRename { get; set; }
 
     [Option("osdb", HelpText = "Whether to export or not the parsed archive as an OSDB file.", Required = false)]
     public string? OSDBPath { get; set; }

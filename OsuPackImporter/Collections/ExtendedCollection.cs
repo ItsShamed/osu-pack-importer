@@ -142,6 +142,13 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
 
         return memstream.ToArray();
     }
+    
+    public override void Rename()
+    {
+        base.Rename();
+        foreach (var collection in SubCollections)
+            collection.Rename();
+    }
 
     public IParsable Parse(ProgressContext? context = null)
     {

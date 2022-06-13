@@ -36,4 +36,16 @@ public abstract class Collection : ISerializable
 
         return memstream.ToArray();
     }
+
+    /// <summary>
+    /// Prompts for collection renaming. Stay unchanged if no input is given.
+    /// </summary>
+    public virtual void Rename()
+    {
+        string newName = AnsiConsole.Ask<string>($"Rename collection {Name} (leave empty for default): ");
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            Name = newName;
+        }
+    }
 }

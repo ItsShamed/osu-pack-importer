@@ -53,6 +53,14 @@ public static class Program
             return 1;
         }
 
+        if (!options.NoRename)
+        {
+            if (AnsiConsole.Confirm("Do you want to rename the imported collections?"))
+            {
+                extendedCollection.Rename();
+            }
+        }
+
         try
         {
             return useOsdb
