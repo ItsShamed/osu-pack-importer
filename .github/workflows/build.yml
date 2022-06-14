@@ -21,8 +21,12 @@ jobs:
         run: dotnet restore
       - name: Publish solution
         run: dotnet publish -c Release -o publish
+      - name: Get latest tag
+        run: echo "::set-output name=value::$(git describe --tags --abbrev=0)"
+        id: latest-tag
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          files: publish/OsuPackImporter.exe
+          tag_name: ${{ steps.latest-tag.outputs.value }}
+          files: ${{ github.workspace }}/publish/OsuPackImporter.exe
           body_path: ${{ github.workspace }}/CHANGELOG.md
