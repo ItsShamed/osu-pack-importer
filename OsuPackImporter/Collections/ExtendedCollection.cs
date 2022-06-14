@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using OsuPackImporter.Beatmaps;
 using OsuPackImporter.Beatmaps.LibExtensions;
 using OsuPackImporter.Interfaces.Parsers;
@@ -18,15 +19,15 @@ using Spectre.Console;
 namespace OsuPackImporter.Collections;
 
 /// <summary>
-/// This collection class uses <see cref="ExtendedBeatmap"/> and <see cref="BeatmapSets"/> objects to store
-/// beatmaps and is serializable to the OSDB format.
+///     This collection class uses <see cref="ExtendedBeatmap" /> and <see cref="BeatmapSets" /> objects to store
+///     beatmaps and is serializable to the OSDB format.
 /// </summary>
 public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
 {
     private readonly Stream _fileStream;
 
     /// <summary>
-    /// Initializes a new instance from archive stream.
+    ///     Initializes a new instance from archive stream.
     /// </summary>
     /// <param name="stream">Archive stream</param>
     /// <param name="name">Name of the collection</param>
@@ -43,7 +44,7 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     }
 
     /// <summary>
-    /// Initializes a new instance from archive file.
+    ///     Initializes a new instance from archive file.
     /// </summary>
     /// <param name="path">Path of the archive file</param>
     /// <param name="context">Terminal context, used to update progress bars.</param>
@@ -60,7 +61,7 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     public override int Count => ComputeCount(out _, out _);
 
     /// <summary>
-    /// Number of sub-<see cref="LegacyCollection"/>s in this collection.
+    ///     Number of sub-<see cref="LegacyCollection" />s in this collection.
     /// </summary>
     public int LegacyCount
     {
@@ -72,7 +73,7 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     }
 
     /// <summary>
-    /// Number of sub-<see cref="ExtendedCollection"/>s in this collection.
+    ///     Number of sub-<see cref="ExtendedCollection" />s in this collection.
     /// </summary>
     public int ExtendedCount
     {
@@ -97,8 +98,8 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     }
 
     /// <summary>
-    /// Serializes this collection to the OSDB format documented
-    /// <a href="https://gist.github.com/ItsShamed/c3c6c83903653d72d1f499d7059fe185#collection-format">here</a>.
+    ///     Serializes this collection to the OSDB format documented
+    ///     <a href="https://gist.github.com/ItsShamed/c3c6c83903653d72d1f499d7059fe185#collection-format">here</a>.
     /// </summary>
     /// <param name="context">Terminal context, used to update</param>
     /// <returns>The serialized data</returns>
@@ -141,7 +142,7 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
     }
 
     /// <summary>
-    /// Serializes this collections to the legacy collection.db format documented
+    ///     Serializes this collections to the legacy collection.db format documented
     /// </summary>
     /// <param name="context">Terminal context, used to update the progress bars</param>
     /// <returns>The serialized data.</returns>
@@ -174,19 +175,12 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
 
         return memstream.ToArray();
     }
-    
-    public override void Rename()
-    {
-        base.Rename();
-        foreach (var collection in SubCollections)
-            collection.Rename();
-    }
 
     /// <summary>
-    /// Parses the currently loaded archive stream and builds the collection.
+    ///     Parses the currently loaded archive stream and builds the collection.
     /// </summary>
     /// <param name="context">Terminal context, used to update the progress bars.</param>
-    /// <returns>This instance of <see cref="ExtendedCollection"/></returns>
+    /// <returns>This instance of <see cref="ExtendedCollection" /></returns>
     /// <exception cref="NotSupportedException">if the loaded archive is not supported by SharpCompress</exception>
     public IParsable Parse(ProgressContext? context = null)
     {
@@ -238,6 +232,75 @@ public class ExtendedCollection : Collection, IOSDBSerializable, IParsable
         }
 
         return this;
+    }
+
+    public override void Rename()
+    {
+        base.Rename();
+        foreach (var collection in SubCollections)
+            collection.Rename();
+    }
+
+    /// <summary>
+    ///     Checks if a collection with the same name than the given one exists in the sub-collection list.
+    /// </summary>
+    /// <param name="name">the collection name</param>
+    /// <returns>Whether the collection exists or not.</returns>
+    public bool CollectionExists(string name)
+    {
+        if (Name == name)
+            return true;
+        foreach (var collection in SubCollections)
+        {
+            if (collection.Name == name)
+                return true;
+            if (collection is ExtendedCollection extendedCollection && extendedCollection.CollectionExists(name))
+                return true;
+        }
+
+        return false;
+    }
+
+    // Create a method that checks for duplicates in a given CollectionDB instance.
+    // The method has a CollectionDB instance as parameter, and returns a list of duplicates.
+    // It will check if the CollectionDB instance contains this collection, or any of its sub-collections (and recursively all their sub-collections if some are instances of ExtendedCollection).
+    // To gain some performance try to make multi-threaded checks.
+    // The method should return a list of duplicates, and not throw any exceptions.
+    // The method should also return a list of duplicates that are not in the collection, but in the sub-collections.
+    public List<Collection> CheckForDuplicates(CollectionDB collectionDb)
+    {
+        Logging.Log("Checking for duplicates...", LogLevel.Debug);
+        var duplicates = new List<Collection>();
+        var checkThreads = new List<Thread>();
+        if (collectionDb.CollectionExists(Name!))
+        {
+            duplicates.Add(this);
+            Logging.Log("Duplicate found: " + Name, LogLevel.Debug);
+        }
+
+        foreach (var subCollection in SubCollections)
+        {
+            var checkThread = new Thread(() =>
+            {
+                if (subCollection is ExtendedCollection extendedCollection)
+                    duplicates.AddRange(extendedCollection.CheckForDuplicates(collectionDb));
+
+                foreach (var dbCollection in collectionDb.Collections)
+                    if (dbCollection.Name == subCollection.Name)
+                    {
+                        duplicates.Add(subCollection);
+                        Logging.Log("Duplicate found: " + Name, LogLevel.Debug);
+                        break;
+                    }
+            });
+            checkThread.Start();
+            checkThreads.Add(checkThread);
+        }
+
+        foreach (var thread in checkThreads)
+            thread.Join();
+
+        return duplicates;
     }
 
     private IArchive? GetArchive(Stream stream)

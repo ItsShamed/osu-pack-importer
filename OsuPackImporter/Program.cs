@@ -18,6 +18,7 @@ public static class Program
 {
     public static bool Verbose;
     public static bool AutoImport;
+    public static bool SkipDuplicateCheck;
     private static ParserResult<Options>? _parserResult;
 
     public static void Main(string[] args)
@@ -39,6 +40,7 @@ public static class Program
         }
 
         Verbose = options.Verbose;
+        SkipDuplicateCheck = options.SkipDuplicateCheck;
 
         var osuPath = options.OsuPath ?? Environment.GetEnvironmentVariable("LOCALAPPDATA") +
             Path.DirectorySeparatorChar + "osu!";
@@ -54,18 +56,19 @@ public static class Program
         }
 
         if (!options.NoRename)
-        {
             if (AnsiConsole.Confirm("Do you want to rename the imported collections?"))
-            {
                 extendedCollection.Rename();
-            }
-        }
 
         try
         {
             return useOsdb
                 ? RunOsdbConversion(extendedCollection, options.OSDBPath!)
                 : RunLegacyConversion(extendedCollection, osuPath);
+        }
+        catch (OperationCanceledException e)
+        {
+            Logging.Log("The program was aborted: " + e.Message, LogLevel.Error);
+            return 1;
         }
         catch (Exception e)
         {
@@ -97,7 +100,7 @@ public static class Program
                 .SpinnerStyle(Style.Parse("yellow bold"))
                 .Start("Waiting for osu! to be closed...", _ =>
                 {
-                    Process[] processes = Process.GetProcessesByName("osu!");
+                    var processes = Process.GetProcessesByName("osu!");
                     while (processes.Length > 0)
                     {
                         processes = Process.GetProcessesByName("osu!");
@@ -115,10 +118,32 @@ public static class Program
             return 1;
         }
 
-        collectionDb.Collections.Add(inputCollection);
-        if (File.Exists("collection.db.OLD"))
+        List<Collection>? duplicates = null;
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .SpinnerStyle(Style.Parse("yellow bold"))
+            .Start("Checking for duplicates...", _ =>
+            {
+                if (SkipDuplicateCheck)
+                {
+                    Logging.Log("Duplicate checks are skipped. Duplicate collections may be created.", LogLevel.Warn);
+                    return;
+                }
+
+                duplicates = inputCollection.CheckForDuplicates(collectionDb);
+            });
+
+        if (duplicates!.Count > 0 && !SkipDuplicateCheck)
         {
+            Logging.Log("Duplicates were found. The following collections will be created if continuing:",
+                LogLevel.Warn);
+            foreach (var duplicate in duplicates) Logging.Log("- " + duplicate.Name, LogLevel.Warn);
+
+            if (!AnsiConsole.Confirm("Do you want to continue?", false))
+                throw new OperationCanceledException("Duplicates were found.");
         }
+
+        collectionDb.Collections.Add(inputCollection);
 
         Logging.Log("Backing up existing collection.db...");
 

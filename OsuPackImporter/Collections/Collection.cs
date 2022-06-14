@@ -7,7 +7,7 @@ using Spectre.Console;
 namespace OsuPackImporter.Collections;
 
 /// <summary>
-/// C# object representing an osu! collection.
+///     C# object representing an osu! collection.
 /// </summary>
 public abstract class Collection : ISerializable
 {
@@ -17,7 +17,8 @@ public abstract class Collection : ISerializable
     public abstract int Count { get; }
 
     /// <summary>
-    /// Serializes the collection as a byte array following the format provided <a href="https://github.com/ppy/osu/wiki/Legacy-database-file-structure#collectiondb-format">here</a>.
+    ///     Serializes the collection as a byte array following the format provided
+    ///     <a href="https://github.com/ppy/osu/wiki/Legacy-database-file-structure#collectiondb-format">here</a>.
     /// </summary>
     /// <param name="context">Terminal context, used to update the progress bars.</param>
     /// <returns>Byte array containing the serialized data</returns>
@@ -46,14 +47,11 @@ public abstract class Collection : ISerializable
     }
 
     /// <summary>
-    /// Prompts for collection renaming. Stay unchanged if no input is given.
+    ///     Prompts for collection renaming. Stay unchanged if no input is given.
     /// </summary>
     public virtual void Rename()
     {
-        string newName = AnsiConsole.Ask<string>($"Rename collection {Name} (leave empty for default): ");
-        if (!string.IsNullOrWhiteSpace(newName))
-        {
-            Name = newName;
-        }
+        var newName = AnsiConsole.Ask<string>($"Rename collection {Name} (leave empty for default): ");
+        if (!string.IsNullOrWhiteSpace(newName)) Name = newName;
     }
 }

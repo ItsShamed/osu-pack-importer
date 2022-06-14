@@ -18,7 +18,7 @@ public class Options
         HelpText = "Prevent automatic import of beatmaps in the game when dumping into collection.db.",
         Required = false)]
     public bool NoAutoImport { get; set; }
-    
+
     [Option("no-rename", Default = false,
         HelpText = "Don't rename collections after import.",
         Required = false)]
@@ -31,13 +31,19 @@ public class Options
         HelpText = "The location of your osu!stable installation.")]
     public string? OsuPath { get; set; }
 
+    // Create a flag --skip-duplicate-check to skip checking for duplicate collections in collection.db.
+    [Option("skip-duplicate-check", Default = false,
+        HelpText = "Skip checking for duplicate collections in collection.db.",
+        Required = false)]
+    public bool SkipDuplicateCheck { get; set; }
+
     [Usage(ApplicationAlias = "OsuPackImporter")]
     public static IEnumerable<Example> Examples => new[]
     {
         new Example("Convert and import a beatmap pack into a collection in the game",
             new Options
             {
-                InputPath = "<path to archive>",
+                InputPath = "<path to archive>"
             }),
         new Example("Convert without importing a beatmap pack into a collection in the game",
             new Options

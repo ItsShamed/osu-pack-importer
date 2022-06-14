@@ -1,5 +1,6 @@
-﻿## What's new?
+﻿### What's new?
 
-* The program now asks if the imported collections should be renamed.
-You can disable this behaviour by passing the `--no-rename` flag.
-* The program now pauses if osu! is running (for normal imports).
+* The program now checks for duplicate collections and will ask you if you want to continue if it finds one.
+You can also disable this behaviour by passing the `--skip-duplicate-check` flag.
+* Backups now include the date in the filename to not overwrite the old ones. 
+Be sure to clean up your backups from time to time!
