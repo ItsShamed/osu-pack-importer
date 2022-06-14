@@ -51,7 +51,8 @@ public abstract class Collection : ISerializable
     /// </summary>
     public virtual void Rename()
     {
-        var newName = AnsiConsole.Ask<string>($"Rename collection {Name} (leave empty for default): ");
+        var newName = AnsiConsole.Ask($"Rename collection {Name} [gray](leave empty for default)[/]",
+            Name!);
         if (!string.IsNullOrWhiteSpace(newName)) Name = newName;
     }
 }

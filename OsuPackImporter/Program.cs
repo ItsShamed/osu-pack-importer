@@ -23,11 +23,76 @@ public static class Program
 
     public static void Main(string[] args)
     {
+        if (args.Length == 0 && AnsiConsole.Confirm("Did you meant to run the program without arguments? " +
+                                                    "(e.g: you opened the program from the file explorer)"))
+        {
+            GuidedRun(ref args);
+        }
+
         _parserResult = Parser.Default.ParseArguments<Options>(args);
 
         _parserResult
             .WithParsed(o => Environment.Exit(Run(o)))
             .WithNotParsed(e => Environment.Exit(FailRun(e, _parserResult)));
+    }
+
+    private static void GuidedRun(ref string[] args)
+    {
+        List<string> tempArgs = new List<string>();
+        string inputPath = AnsiConsole.Ask<string>("Enter the path to the beatmap pack " +
+                                                   "[gray](you can also drag the file in the console)[/]:");
+        if (String.IsNullOrWhiteSpace(inputPath))
+            return;
+        tempArgs.Add(inputPath);
+
+        if (AnsiConsole.Confirm("Do you want to export it as a .osdb file?", false))
+        {
+            string osdbFolderPath = AnsiConsole.Ask(
+                "Enter the path of the folder where the .osdb " +
+                "file will be saved [gray](you can also drag the folder in the console)[/]",
+                Directory.GetCurrentDirectory());
+            while (!Directory.Exists(osdbFolderPath))
+            {
+                Logging.Log("Could not find the specified folder.", LogLevel.Error);
+                osdbFolderPath = AnsiConsole.Ask(
+                    "Enter the path of the folder where the .osdb " +
+                    "file will be saved [gray](you can also drag the folder in the console)[/]",
+                    Directory.GetCurrentDirectory());
+            }
+
+            string osdbFileName = AnsiConsole.Ask("Enter the name of the file", "collection.osdb");
+            if (!osdbFileName.EndsWith(".osdb")) osdbFileName += ".osdb";
+            string osdbPath = osdbFolderPath + "\\" + osdbFileName;
+            while (File.Exists(osdbPath))
+            {
+                Logging.Log("This file already exists.");
+                if (!AnsiConsole.Confirm("Do you want to overwrite this file?", false))
+                {
+                    osdbFileName = AnsiConsole.Ask("Enter the name of the file", "collection.osdb");
+                    if (!osdbFileName.EndsWith(".osdb")) osdbFileName += ".osdb";
+                    osdbPath = osdbFolderPath + "\\" + osdbFileName;
+                }
+            }
+
+            tempArgs.Add("--osdb");
+            tempArgs.Add(osdbPath);
+        }
+        else
+        {
+            if (!AnsiConsole.Confirm("Do you want to automatically import the beatmaps in osu!?"))
+            {
+                tempArgs.Add("--no-import");
+            }
+        }
+
+        args = tempArgs.ToArray();
+        Logging.Log("The program will now start with the following arguments:");
+        Logging.Log("OsuPackImporter " + String.Join(' ', args));
+        if (!AnsiConsole.Confirm("Are you okay with this?"))
+        {
+            Logging.Log("Aborting...", LogLevel.Error);
+            Environment.Exit(1);
+        }
     }
 
     private static int Run(Options options)
@@ -147,7 +212,7 @@ public static class Program
 
         Logging.Log("Backing up existing collection.db...");
 
-        File.Copy("collection.db", "collection.db.OLD_" 
+        File.Copy("collection.db", "collection.db.OLD_"
                                    + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
         using (var stream = File.Create(@"collection.db"))
         {
