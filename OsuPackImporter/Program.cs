@@ -118,13 +118,12 @@ public static class Program
         collectionDb.Collections.Add(inputCollection);
         if (File.Exists("collection.db.OLD"))
         {
-            Logging.Log("Deleting old collection.db backup...", LogLevel.Warn);
-            File.Delete("collection.db.OLD");
         }
 
         Logging.Log("Backing up existing collection.db...");
 
-        File.Copy("collection.db", "collection.db.OLD");
+        File.Copy("collection.db", "collection.db.OLD_" 
+                                   + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
         using (var stream = File.Create(@"collection.db"))
         {
             using (var writer = new BinaryWriter(stream))
