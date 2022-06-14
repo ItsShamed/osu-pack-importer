@@ -26,6 +26,10 @@ public static class Program
         if (args.Length == 0 && AnsiConsole.Confirm("Did you meant to run the program without arguments? " +
                                                     "(e.g: you opened the program from the file explorer)"))
         {
+            Logging.Log("You'll now go through providing the necessary information for the program to" +
+                        " work.");
+            AnsiConsole.MarkupLine("[italic]Press any key to continue...[/]");
+            Console.ReadKey(true);
             GuidedRun(ref args);
         }
 

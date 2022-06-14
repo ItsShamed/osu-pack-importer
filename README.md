@@ -54,6 +54,9 @@ flag:
 OsuPackImporter --no-rename "<path to archive>"
 ```
 
+If you don't provide arguments, it will go in a kind of interactive mode to set
+those arguments for you.
+
 __Note__: You will need to close the game before running the program, especially if you're not using conversion to a `.osdb` file.
 The program will pause by itself anyway.
 
